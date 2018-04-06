@@ -29,13 +29,6 @@ public interface Query {
      */
     List<Result> getQueryResults();
 
-    // ================== extra ====
-
-    /**
-     * @param resultList
-     * @Effects adds results to the result list of the corresponding query
-     */
-    void putResultList(List<Result> resultList);
 
 
 }

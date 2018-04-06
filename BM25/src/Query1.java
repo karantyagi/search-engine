@@ -72,11 +72,5 @@ public class Query1 implements Query {
 
     // ================== extra ====
 
-    /**
-     * @param resultList
-     * @Effects adds results to the result list of the corresponding query
-     */
-    public void putResultList(List<Result> resultList) {
 
-    }
 }

@@ -1,8 +1,7 @@
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Implements BM25 retrieval model
@@ -154,12 +153,7 @@ public class BM25Model {
 
     static void processQuery(String queryLine) throws IOException {
 
-        List<String> queryTerms = getQueryTerms(queryLine);
-        System.out.print(getQueryID(queryLine)+ "   ");
-        for(String q : queryTerms){
-            System.out.print(q+" ");
-        }
-        System.out.println();
+
 
         // ============================================================== //
         // Process Each Query
@@ -172,10 +166,26 @@ public class BM25Model {
         // 5- For	parameters,	use	k1=1.2,	b=0.75,	k2=100.
         // 6- Sort	the	documents	by	the	BM25	scores
 
-        Query1 q = new Query1(getQueryID(queryLine),queryTerms);
+        //List<String> queryTerms = getQueryTerms(queryLine);
+
+        Query1 q = new Query1(getQueryID(queryLine),getQueryTerms(queryLine));
+        System.out.print(getQueryID(queryLine)+ "   ");
+        System.out.println(q.toString());
+
+        // ============================================================== //
+        // Add relevant documents for a query
+        // ============================================================== //
 
         List<RelevantDoc> relevantDocsForQuery = getRelevantDocs(q);
         q.setRelevantDocuments(relevantDocsForQuery);
+
+        for(RelevantDoc r: q.getRelevantDocuments()){
+            System.out.println(r.toString());
+        }
+
+        // ================================================================ //
+        // Calculate r relevant documents for a query and populate results
+        // ================================================================ //
 
         List<Result> BM25Results = getRetrievalResults(q);
         q.setQueryResults(BM25Results);
@@ -218,10 +228,13 @@ public class BM25Model {
         return results;
     }
 
-    private static List<RelevantDoc> getRelevantDocs(Query1 q) throws IOException {
+    private static List<RelevantDoc> getRelevantDocs(Query q) throws IOException {
 
         List<RelevantDoc> rDocs = new ArrayList<>();
         RelevantDoc d;
+        String term = null;
+        String docID= null;
+        String tf = null;
 
         // Read inverted index for terms
         // Open the file
@@ -230,49 +243,50 @@ public class BM25Model {
             fstream = new FileInputStream(unigramIndexPath);
             BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
             String line = null;
-            String words[];
+            String invertedList = null;
             int lineCount =0;
 
             //Read File Line By Line
-            while ((line = br.readLine())!= null)   {
+            while ((line = br.readLine())!= null) {
                 lineCount++;
+                invertedList = line.substring(line.indexOf("[")+1);
                 // Print the content on the console
-                line = line.trim().replace("\t", " ");
-                line = line.replaceAll(" +", " ");
-                words = line.split(" ");
+                if (lineCount > 2) {
 
-                if(lineCount==1){
-                    if(line.toLowerCase().contains("query_id") && line.toLowerCase().contains("query_text"))
-                        continue;
+                    term = line.split("\\[")[0].trim();
+                    for(String s: q.queryTerms()){
+                        if(s.equals(term)){
+                            // System.out.println("======= " +term + "================");
+                            //System.out.println(invertedList);
+                           Matcher m = Pattern.compile("\\[([^]]+)\\]").matcher(invertedList);
+                            while(m.find()){
+                               //System.out.println(m.group());
+                               docID = m.group().split(":")[0].replace("["," ").trim();
+                               tf = m.group().split(":")[1].replace("]"," ").trim();
+                               //System.out.println(docID+" "+tf);
+                               d = new RelevantDoc1(s,docID,Integer.parseInt(tf));
+                               rDocs.add(d);
+                            }
 
 
-                }
-
-                else{
-                    if (words.length>1 && words[0].matches("[0-9]+") && words[1].matches("[a-zA-Z0-9]+")){
-                        //System.out.println(words[0]+" "+words[1]);
-                        continue;
-                    }
-                    else if(words.length == 1 && words[0].equals("")){
-                        //System.out.println("Blank line "+" len : "+words.length);
-                        return false;
-                    }
-
-                    else {
-                        //System.out.println(words[0]+" len : "+words.length);
-                        return false;
+                        }
                     }
                 }
+
             }
+
             //Close the input stream
             br.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-
-
-
+        // Remove duplicated relevant docs
+        Set<RelevantDoc> hs = new HashSet<>();
+        hs.addAll( rDocs);
+        rDocs.clear();
+        rDocs.addAll(hs);
+        return rDocs;
     }
 
 
