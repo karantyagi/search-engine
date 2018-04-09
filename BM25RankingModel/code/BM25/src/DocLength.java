@@ -35,7 +35,7 @@ public class DocLength {
 
             }
             totalDocs = lineCount-3;
-           // System.out.println("Total docs: "+totalDocs);
+           System.out.println("Total docs: "+totalDocs);
 
                     //Close the input stream
                     br.close();
@@ -43,7 +43,7 @@ public class DocLength {
                     e.printStackTrace();
                     }
 
-       //System.out.println("Avg doc length: "+ (allDocLength/totalDocs));
+       System.out.println("Avg doc length: "+ (allDocLength/totalDocs));
         return ((double)(allDocLength))/totalDocs;
     }
 
@@ -75,7 +75,6 @@ public class DocLength {
                     }
                 }
             }
-            //System.out.println("Total docs: "+totalDocs);
             //Close the input stream
             br.close();
         } catch (FileNotFoundException e) {
@@ -83,15 +82,14 @@ public class DocLength {
         }
         return 0.0;
     }
-
 /**
-    // TEST Doc Length
+    //TEST Doc Length
 
     public static void main(String[] args) throws IOException {
 
         double d = getAvgDocLength();
-        d = getDocLength("human");
+        d = getDocLength("Russia");
     }
-*/
 
+*/
 }

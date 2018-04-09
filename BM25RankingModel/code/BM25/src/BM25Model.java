@@ -77,19 +77,49 @@ public class BM25Model {
             invertedListsForQuery = new HashMap<>();
             List<String> allQueryTerms = getAllQueryTerms(queryFilePath);
 
-            /**
+
+
             // Display all queries - all terms:
+            System.out.println("ALL QUERY TERMS: ");
             for(String s: allQueryTerms){
-                System.out.print(s+" ");
+                System.out.println(s);
             }
-            System.out.println();
-             */
+            System.out.println("-----------------");
+
+
             invertedListsForQuery = UnigramInvertedIndex.addAllIndexLists(invertedIndex, allQueryTerms);
+            writeInvertedLists(invertedListsForQuery);
             processQueryList(queryFilePath);
 
         }
 
         br1.close();
+    }
+
+    private static void writeInvertedLists(Map<String, List<Posting>> invertedListsForQuery) throws IOException {
+
+        String resultDir =  "..\\..\\retrievedResults";
+        FileWriter fw;
+        BufferedWriter bw;
+        if (!new File(resultDir).isDirectory())
+        {
+            File dir = new File(resultDir);
+            dir.mkdirs();
+            System.out.println(resultDir+" created!");
+        }
+
+        // PUT IN INVERTED_INDEX_ LOOP
+         String q = "query";
+        fw = new FileWriter(resultDir + "\\" + q+"___.txt");
+        bw = new BufferedWriter(fw);
+        bw.append(" write");
+
+        // PUT IN INVERTED INDEX LOOP
+
+
+        bw.close();
+        fw.close();
+
     }
 
 
@@ -115,8 +145,9 @@ public class BM25Model {
                 if(lineCount==1){
                     if(line.toLowerCase().contains("query_id") && line.toLowerCase().contains("query_text"))
                         continue;
-                    else
+                    else {
                         return false;
+                    }
                 }
 
                 else{
@@ -131,6 +162,7 @@ public class BM25Model {
 
                     else {
                         //System.out.println(words[0]+" len : "+words.length);
+
                         return false;
                     }
                 }
@@ -220,6 +252,15 @@ public class BM25Model {
         // ======================================================================= //
         Set<String> relevantDocsForQuery = getRelevantDocs(q);
         q.setRelevantDocuments(relevantDocsForQuery);
+
+        System.out.println("RELEVANT DOCS FOR QUERy : "+q.toString());
+        List<String> relDocs = new ArrayList<>(q.getRelevantDocuments());
+        Collections.sort(relDocs);
+        for(String s: relDocs){
+            System.out.printf("%70s %f\n",s,DocLength.getDocLength(s));
+
+        }
+
 
         // ============================================================================ //
         // Calculate BM25 score for relevant documents for a query and populate results
@@ -328,11 +369,17 @@ public class BM25Model {
     private static double calculateDocBMScore(Query1 q, String rdocID) throws IOException {
         double BMScore = 0.0;
         for(String queryTerm : q.queryTerms()){
+            System.out.println("==============================");
+            System.out.println(queryTerm);
             int qf = getQueryTermFreq(queryTerm,q.queryTerms());
+            System.out.println("BMScore : "+BMScore);
             int tf = getTermFreq(queryTerm,rdocID);
-            double n = computeDocFreq(queryTerm);
-            BMScore += calculateTermScore(qf,tf,n,rdocID);
+            double ni = computeDocFreq(queryTerm);
+            BMScore += calculateTermScore(qf,tf,ni,rdocID);
         }
+        System.out.println();
+        System.out.println("BMScore : "+BMScore);
+        System.out.println("==============================");
         return BMScore;
     }
 
@@ -345,7 +392,7 @@ public class BM25Model {
                     postings = entry.getValue();
                     for (Posting p : postings){
                         if(p.docID().equals(docID)){
-                            //System.out.println(term+" tf: "+p.termFreq());
+                            //System.out.println("TF(fi)  : "+p.termFreq());
                             return p.termFreq();
                         }
                     }
@@ -377,11 +424,12 @@ public class BM25Model {
                 freq+=1;
             }
         }
+        //System.out.println("QTF(qfi)  : "+freq);
         return freq;
     }
 
     private static double calculateTermScore(int queryTermFreq, int termFreq,
-                                             double relevantDocFreq, String rd) throws IOException {
+                                             double relevantDocFreq, String rdoc) throws IOException {
 
         // No relevance information
         double r = 0.0;
@@ -390,26 +438,39 @@ public class BM25Model {
         double k1 = 1.2;
         double k2 = 100;
         double b = 0.75;
-
-        double K = computeK(k1,b,rd);
+        double K = computeK(k1,b,rdoc);
 
         double f = termFreq; // term frequency of term in given doc
         double qf = queryTermFreq;
+        System.out.println("TF(fi)  : "+f);
+        System.out.println("QTF(qfi): "+qf);
 
-        double n = relevantDocFreq;
+        double ni = relevantDocFreq;
         double N = 1000; // Number of Documents
+        System.out.println("Doc Freq:" +ni);
 
-        double firstComponentN = (r + 0.5) / (R - r + 0.5);
-        //System.out.println("first N" + firstComponentN);
-        double firstComponentD = (n - r + 0.5) / (N - n - R + r + 0.5);
-        //System.out.println("first D" + firstComponentD);
-        double secondComponent = ((k1 + 1.0)*f)/(K+f);
-        //System.out.println("second" + secondComponent);
-        double thirdComponent = ((k2+1.0)*qf)/(k2+qf);
-        //System.out.println("third" + thirdComponent);
+        double firstN = (r+0.5) / (R- r+0.5);
+        double firstD = (ni-r +0.5) / (N-ni-R+r+0.5);
+
+        double secondN = (k1 + 1.0)*f;
+        double secondD = K+f;
+
+        double thirdN = (k2+1)*qf;
+        double thirdD = k2+qf;
+
+        double score = (Math.log(firstN/firstD))*(secondN/secondD)*(thirdN/thirdD);
+
+        System.out.println("first N : " + firstN);
+        System.out.println("first D : " + firstD);
+        System.out.println("secondN : " + secondN);
+        System.out.println("secondD : " + secondD);
+        System.out.println("thirdN  : " + thirdN);
+        System.out.println("thirdD  : " + thirdD);
+        System.out.println("Score   : " + score);
+
         //System.out.println((firstParameterNumerator / firstParameterDenominator) * secondParameter * thirdParameter);
-        //System.out.println((Math.log((firstParameterNumerator / firstParameterDenominator) * secondParameter * thirdParameter)));
-        return (Math.log((firstComponentN / firstComponentD))) * secondComponent * thirdComponent;
+        //System.out.println("final   : "+((Math.log((firstComponentN / firstComponentD))) * secondComponent * thirdComponent));
+        return score;
     }
 
     // ================================= //
@@ -417,9 +478,10 @@ public class BM25Model {
     // ================================= //
     private static double computeK(double k1, double b, String docID) throws IOException {
         //System.out.println(avdl);
-        //System.out.println("Doc Length: "+ docLengths.get(docID));
-        double K = k1 * ((1 - b) + b * docLengths.get(docID)/ avdl);
-        //System.out.println("K: "+K);
+        System.out.println("Doc ID  : "+docID);
+        System.out.println("Doc Len : "+ docLengths.get(docID));
+        double K = k1 * ((1 - b) + b*(docLengths.get(docID)/ avdl));
+        System.out.println("K       : "+K);
         return K;
     }
 
@@ -434,6 +496,7 @@ public class BM25Model {
         for(String t : terms){
             if(position!=1) {
                 queryTerms.add(t);
+                System.out.println("TERM: "+t);
             }
             position++;
         }

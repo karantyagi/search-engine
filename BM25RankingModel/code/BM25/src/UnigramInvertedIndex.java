@@ -83,17 +83,17 @@ public class UnigramInvertedIndex {
 
         System.out.println("All inverted lists(for all terms in each query) loaded successfully!");
 
-        /**
+
 
         // Display -  invertedIndexForQuery
-        System.out.println("-------- Display -  invertedIndexForQuery -------");
+        System.out.println("-------- Display -  invertedIndexForQuery -------\n");
         for (Map.Entry<String, List<Posting>> entry : invertedIndexForQuery.entrySet()) {
             term = entry.getKey().toString();
             System.out.printf("%-30s  %s",term, entry.getValue().toString());
             System.out.println();
         }
 
-        */
+
         return invertedIndexForQuery;
     }
 
