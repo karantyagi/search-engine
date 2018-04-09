@@ -1,0 +1,2 @@
+Query_ID	Query_Text
+1		moon

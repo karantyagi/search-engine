@@ -1,0 +1,7 @@
+Query_ID	Query_Text
+1		earthy
+2		solar
+3		moon
+4		earth
+5		solar eclipse		
+
