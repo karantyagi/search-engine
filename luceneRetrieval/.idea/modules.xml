@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/testing_lucene.iml" filepath="$PROJECT_DIR$/testing_lucene.iml" />
+      <module fileurl="file://$PROJECT_DIR$/luceneRetrieval.iml" filepath="$PROJECT_DIR$/luceneRetrieval.iml" />
     </modules>
   </component>
 </project>
