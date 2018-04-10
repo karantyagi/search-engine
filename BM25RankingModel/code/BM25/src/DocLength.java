@@ -89,7 +89,54 @@ public class DocLength {
 
         double d = getAvgDocLength();
         d = getDocLength("Russia");
-    }
 
+        double r = 0.0;
+        double R = 0.0;
+
+        double k1 = 1.2;
+        double k2 = 100;
+        double b = 0.75;
+        double K = computeK(k1,b,"Russia");
+
+        double f = 15; // term frequency of term in given doc
+        double qf = 1;
+        System.out.println("TF(fi)  : "+f);
+        System.out.println("QTF(qfi): "+qf);
+
+        double ni = 40000;
+        double N = 500000; // Number of Documents
+        System.out.println("Doc Freq:" +ni);
+
+        double firstN = (r+0.5) / (R- r+0.5);
+        double firstD = (ni-r +0.5) / (N-ni-R+r+0.5);
+
+        double secondN = (k1 + 1.0)*f;
+        double secondD = K+f;
+
+        double thirdN = (k2+1)*qf;
+        double thirdD = k2+qf;
+
+        double score = (Math.log(firstN/firstD))*(secondN/secondD)*(thirdN/thirdD);
+
+        System.out.println("first N : " + firstN);
+        System.out.println("first D : " + firstD);
+        System.out.println("first   : " + Math.log(firstN/firstD));
+        System.out.println("secondN : " + secondN);
+        System.out.println("secondD : " + secondD);
+        System.out.println("thirdN  : " + thirdN);
+        System.out.println("thirdD  : " + thirdD);
+        System.out.println("Score   : " + score);
+
+
+    }
+    private static double computeK(double k1, double b, String docID) throws IOException {
+        //System.out.println(avdl);
+        System.out.println("Doc ID  : "+docID);
+        System.out.println("Doc Len : "+ getDocLength(docID));
+        double K = k1 * ((1 - b) + b*(0.9));
+        System.out.println("K       : "+K);
+        return K;
+    }
 */
+
 }
